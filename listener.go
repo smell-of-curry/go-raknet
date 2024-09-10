@@ -270,7 +270,7 @@ func (s *security) block(addr net.Addr) {
 // handling.
 func (s *security) blocked(addr net.Addr) bool {
 	if s.conf.BlockDuration < 0 || s.blockCount.Load() == 0 {
-		// Fast path optimisation: Prevents (relatively costly) map lookups.
+		// Fast path optimization: Prevents (relatively costly) map lookups.
 		return false
 	}
 	s.mu.Lock()
