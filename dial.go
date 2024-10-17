@@ -4,12 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/sandertv/go-raknet/internal"
-	"log/slog"
 	"math/rand/v2"
 	"net"
 	"sync/atomic"
 	"time"
+
+	"github.com/sandertv/go-raknet/internal"
+	"github.com/sirupsen/logrus"
 
 	"github.com/sandertv/go-raknet/internal/message"
 )
@@ -89,9 +90,9 @@ func DialContext(ctx context.Context, address string) (*Conn, error) {
 // as the protocol version of the connection and the logger used.
 type Dialer struct {
 	// ErrorLog is a logger that errors from packet decoding are logged to. By
-	// default, ErrorLog is set to a new slog.Logger with a slog.Handler that
+	// default, ErrorLog is set to a new logrus.Logger with a logrus.Handler that
 	// is always disabled. Error messages are thus not logged by default.
-	ErrorLog *slog.Logger
+	ErrorLog *logrus.Logger
 
 	// UpstreamDialer is a dialer that will override the default dialer for
 	// opening outgoing connections. The default is a net.Dial("udp", ...).
@@ -211,14 +212,20 @@ func (dialer Dialer) DialTimeout(address string, timeout time.Duration) (*Conn, 
 // context.Context is closed.
 func (dialer Dialer) DialContext(ctx context.Context, address string) (*Conn, error) {
 	if dialer.ErrorLog == nil {
-		dialer.ErrorLog = slog.New(internal.DiscardHandler{})
+		dialer.ErrorLog = logrus.New()
 	}
 
 	conn, err := dialer.dial(ctx, address)
 	if err != nil {
 		return nil, dialer.error("dial", err)
 	}
-	dialer.ErrorLog = dialer.ErrorLog.With("src", "dialer", "raddr", conn.RemoteAddr().String())
+
+	remoteAddr := conn.RemoteAddr().String()
+	dialer.ErrorLog = dialer.ErrorLog.WithFields(logrus.Fields{
+		"src":    remoteAddr,
+		"dialer": remoteAddr,
+		"raddr":  remoteAddr,
+	}).Logger
 
 	cs := &connState{conn: conn, raddr: conn.RemoteAddr(), id: atomic.AddInt64(&dialerID, 1), ticker: time.NewTicker(time.Second / 2)}
 	defer cs.ticker.Stop()

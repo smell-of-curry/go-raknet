@@ -4,18 +4,19 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"github.com/sandertv/go-raknet/internal/message"
 	"hash/crc32"
-	"log/slog"
 	"net"
 	"time"
+
+	"github.com/sandertv/go-raknet/internal/message"
+	"github.com/sirupsen/logrus"
 )
 
 type connectionHandler interface {
 	handle(conn *Conn, b []byte) (handled bool, err error)
 	limitsEnabled() bool
 	close(conn *Conn)
-	log() *slog.Logger
+	log() *logrus.Logger
 }
 
 type listenerConnectionHandler struct {
@@ -28,7 +29,7 @@ var (
 	errUnexpectedAdditionalNIC = errors.New("unexpected additional NEW_INCOMING_CONNECTION packet")
 )
 
-func (h listenerConnectionHandler) log() *slog.Logger {
+func (h listenerConnectionHandler) log() *logrus.Logger {
 	return h.l.conf.ErrorLog
 }
 
@@ -192,7 +193,7 @@ func (h listenerConnectionHandler) handleNewIncomingConnection(conn *Conn) error
 	return nil
 }
 
-type dialerConnectionHandler struct{ l *slog.Logger }
+type dialerConnectionHandler struct{ l *logrus.Logger }
 
 var (
 	errUnexpectedCR            = errors.New("unexpected CONNECTION_REQUEST packet")
@@ -200,7 +201,7 @@ var (
 	errUnexpectedNIC           = errors.New("unexpected NEW_INCOMING_CONNECTION packet")
 )
 
-func (h dialerConnectionHandler) log() *slog.Logger {
+func (h dialerConnectionHandler) log() *logrus.Logger {
 	return h.l
 }
 

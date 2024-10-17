@@ -3,7 +3,6 @@ package raknet
 import (
 	"errors"
 	"fmt"
-	"log/slog"
 	"maps"
 	"math"
 	"math/rand/v2"
@@ -12,7 +11,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/sandertv/go-raknet/internal"
+	"github.com/sirupsen/logrus"
 )
 
 // UpstreamPacketListener allows for a custom PacketListener implementation.
@@ -23,9 +22,9 @@ type UpstreamPacketListener interface {
 // ListenConfig may be used to pass additional configuration to a Listener.
 type ListenConfig struct {
 	// ErrorLog is a logger that errors from packet decoding are logged to. By
-	// default, ErrorLog is set to a new slog.Logger with a slog.Handler that
+	// default, ErrorLog is set to a new logrus.Logger with a logrus.Handler that
 	// is always disabled. Error messages are thus not logged by default.
-	ErrorLog *slog.Logger
+	ErrorLog *logrus.Logger
 
 	// UpstreamPacketListener adds an abstraction for net.ListenPacket.
 	UpstreamPacketListener UpstreamPacketListener
@@ -82,9 +81,9 @@ var listenerID = rand.Int64()
 // as the used log and/or the accepted protocol.
 func (conf ListenConfig) Listen(address string) (*Listener, error) {
 	if conf.ErrorLog == nil {
-		conf.ErrorLog = slog.New(internal.DiscardHandler{})
+		conf.ErrorLog = logrus.New()
 	}
-	conf.ErrorLog = conf.ErrorLog.With("src", "listener")
+	conf.ErrorLog = conf.ErrorLog.WithField("src", "listener").Logger
 
 	if conf.BlockDuration == 0 {
 		conf.BlockDuration = time.Second * 10
