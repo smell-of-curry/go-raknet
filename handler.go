@@ -70,7 +70,7 @@ func (h listenerConnectionHandler) handleUnconnected(b []byte, addr net.Addr) er
 		// In some cases, the client will keep trying to send datagrams
 		// while it has already timed out. In this case, we should not return
 		// an error.
-		h.log().Debug("unexpected datagram", "raddr", addr.String())
+		// h.log().Debug("unexpected datagram", "raddr", addr.String())
 		return nil
 	}
 	return fmt.Errorf("unknown unconnected packet (id=%x, len=%v)", b[0], len(b))
